@@ -1,0 +1,276 @@
+---
+title: "Sample GGPlot FIgures"
+output: html_document
+---
+
+
+## Problem 1
+
+
+```{r problem_1_data,include=FALSE}
+
+#####DO NOT MODIFY THIS CHUNK
+library(tidyverse)
+
+set.seed(12345)
+
+var1<-runif(50,0,10)
+
+set.seed(12345)
+
+var2<-var1+rnorm(50,5,2)
+
+set.seed(12345)
+
+var3<- var1*(-rnorm(50,1,.2))
+
+dat1<-tibble(var1,var2,var3)
+
+
+```
+
+```{r problem_1,echo=FALSE,message=FALSE}
+
+####Make sure you install any necessary libraries
+
+ggplot(dat1, aes(var1, var2)) + geom_point() + geom_smooth()
+```
+
+## Problem 2
+
+
+```{r problem_2_data,include=FALSE}
+
+#####DO NOT MODIFY THIS CHUNK
+
+set.seed(10)
+var1<-runif(50,0,10)
+set.seed(10)
+var2<-var1+rnorm(50,5,2)
+set.seed(10)
+var3<- var1*(-rnorm(50,1,.2))
+
+dat2<-tibble(var1,var2,var3)
+```
+
+
+```{r solution_p2,echo=FALSE,message=FALSE}
+library(GGally)
+
+ggpairs(dat2)
+
+
+my_scatter<-function(data,mapping){
+  ggplot(data=data,mapping=mapping)+
+    geom_jitter(color="orange")
+}
+
+
+my_density<-function(data,mapping){
+   ggplot(data=data,mapping=mapping)+
+   geom_density(alpha=1,
+               fill="blue")
+}
+
+
+ggpairs(dat2,
+        lower=list(continuous=my_scatter),
+        diag=list(continuous=my_density))
+
+```
+
+## Problem 3
+
+
+```{r problem_3_data,include=FALSE}
+
+#####DO NOT MODIFY THIS CHUNK
+
+set.seed(12)
+var1<-runif(50,0,10)
+set.seed(12)
+var2<-var1+rnorm(50,5,2)
+set.seed(12)
+var3<- var1*(-rnorm(50,1,.2))
+
+dat3<-tibble(var1,var2,var3)
+```
+
+```{r problem3,echo=FALSE}
+
+library(ggcorrplot)
+library(ggthemes)
+
+#####calculate correlation coefficients
+
+r<-cor(dat3,use="complete.obs")
+
+
+####generate the correlation plot
+
+
+ggcorrplot(r,type="lower",title="Correlations")
+
+ggcorrplot(r,type="lower",title="Correlations", ggtheme=theme_wsj())
+
+
+```
+
+## Problem 4
+
+
+```{r problem_4_data,include=FALSE}
+
+#####DO NOT MODIFY THIS CHUNK
+
+set.seed(5678)
+var1<-rnorm(10,25,5)
+names<-letters[1:10]
+
+dat4<-tibble(names,var1)
+```
+
+```{r problem_4,echo=FALSE}
+
+
+####points only
+
+ggplot(dat4,aes(x=var1,y=names))+
+  geom_point()
+
+####Some refinements
+
+ggplot(dat4,aes(x=var1,y=reorder(names,var1)))+######reorder in descending
+  geom_point(size=5)+
+  theme(panel.grid.major.x=element_blank(),
+        panel.grid.minor.x=element_blank(),
+        panel.grid.major.y=element_line(linetype="dashed",color="red"))+
+  labs(x="Variable 1",y="")
+
+```
+
+## Problem 5
+
+
+```{r problem_5_data,include=FALSE}
+
+#####DO NOT MODIFY THIS CHUNK
+
+set.seed(13)
+var1<-rnorm(10,25,5)
+names<-letters[1:10]
+
+
+
+dat5<-tibble(names,var1)
+```
+
+```{r problem_5,echo=FALSE}
+
+#Lollipop figure
+
+ggplot(dat5,aes(x=reorder(names,var1),y=var1, color = "chartreuse4"))+
+  geom_point()+
+  geom_segment(aes(x=names,xend=names,y=0,yend=var1))+
+  theme(axis.text.x=element_text(angle=90)) + labs(x = "", y= "Variable 1") + scale_color_manual(values = "chartreuse4") + theme(legend.position = "none")
+```
+
+## Problem 6
+
+
+```{r problem_6_data,include=FALSE}
+
+#####DO NOT MODIFY THIS CHUNK
+
+set.seed(8)
+fiction<-tibble(Genre=rep("Fiction",5),Time=seq(1:5),Total=sample(1:10,5))
+set.seed(7)
+biography<-tibble(Genre=rep("Biography",5),Time=seq(1:5),Total=sample(1:10,5))
+set.seed(9)
+mystery<-tibble(Genre=rep("Mystery",5),Time=seq(1:5),Total=sample(1:10,5))
+
+books_checked_out<-bind_rows(fiction,biography,mystery)
+```
+
+```{r problem_6,echo=FALSE}
+
+####plot the stacked lineplot
+
+ggplot(books_checked_out,aes(x=Time,y=Total, fill = Genre))+
+  geom_area() ####color in the area under the line
+
+```
+
+## Problem 7
+
+
+```{r problem_7_data,include=FALSE}
+
+#####DO NOT MODIFY THIS CHUNK
+
+books_checked_out2 <- books_checked_out %>%
+  filter(Time==1 | Time==5) %>%
+  pivot_wider(names_from = Time,values_from=Total) %>%
+  rename(Time1=`1`,Time5=`5`)
+
+
+```
+   
+```{r,problem_7,echo=FALSE,message=FALSE}   
+
+library(ggalt)
+
+###basic dumbbell chart
+
+ggplot(books_checked_out2,
+       aes(y=Genre,
+           x=Time1, ####the starting point, earliest time
+           xend=Time5))+ ####the ending point, final time
+       geom_dumbbell() ####connects the points
+
+####change the colors and sizes
+
+ggplot(books_checked_out2,
+       aes(y=reorder(Genre,Time1), ####reorders the y axis
+           x=Time1, 
+           xend=Time5))+ 
+  geom_dumbbell(
+    colour_x="purple", ####adds color --- makes sure you "colour", not color
+    colour_xend="red",
+    size_x=3,
+    size_xend=3
+  ) + labs(x="",#### clears out the x axis
+       y="Person")
+
+```
+
+## Problem 8
+
+
+```{r, problem_8_data,include=FALSE}
+
+#####DO NOT MODIFY THIS CHUNK
+
+pie_dat<-c(1,2,3,4,5)
+
+pie_dat
+```
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE, problem_8,echo=FALSE}
+
+
+###HINT: check the Help file for pie to see how to specify the color to the my_color palette
+
+help(pie)
+
+library(RColorBrewer)
+
+my_color<-brewer.pal(4,"Spectral")
+
+pie(pie_dat,col = c("red", "orange", "antiquewhite1",
+                       "chartreuse", "blue"))
+
+
+```
+
+

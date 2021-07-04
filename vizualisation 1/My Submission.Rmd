@@ -1,0 +1,68 @@
+---
+title: "Week 1 Peer Review"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+
+######DO NOT MODIFY. This will load required packages and data.
+
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+cel <- drop_na(read_csv(url("https://www.dropbox.com/s/4ebgnkdhhxo5rac/cel_volden_wiseman%20_coursera.csv?raw=1")))
+```
+
+
+### Rashad Yusifov:
+
+**IMPORTANT: Filter your data so you are only displaying information for the 115th Congress.**
+
+
+
+
+## Exercise 1
+
+
+
+```{r exercise1,echo=FALSE}
+filtered <- cel %>% filter(congress == 115)
+
+filtered$female <- recode(filtered$female, "1" = "female", "0" = "male")
+
+filtered <- rename(filtered, gender = female)
+
+
+gplot <- ggplot(filtered, aes(x = dwnom1, y = all_pass, fill = gender, color = gender)) + geom_point() + labs(x="Ideology",y="Bills Passed")
+
+gplot
+```
+
+## Exercise 2
+
+
+
+```{r exercise2,echo=FALSE}
+
+filtered$majority <- recode(filtered$majority, "0" = "Minority", "1" = "Majority")
+
+gplot <- ggplot(filtered, aes(x = votepct, y = all_pass, fill = gender, color = gender)) + geom_point() + labs(x="Vote Percentage",y="Bills Passed") +
+  scale_color_manual( values = c("orange", "green")) +
+  facet_wrap(~majority)
+
+gplot
+
+
+
+```
+
+## Exercise 3
+
+
+```{r exercise3,echo=FALSE}
+
+gplot <- ggplot(filtered, aes( y = les, fill = majority)) + geom_boxplot() + labs(x="Vote Percentage",y="Bills Passed") + labs(x="Majority or Minority", y = "Legislative Effectiveness", title = "LES in the 115th Congress") + 
+  scale_color_manual( values = c("orange", "green")) + theme(legend.position="none")
+
+gplot
+```

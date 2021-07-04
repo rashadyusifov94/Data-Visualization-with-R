@@ -1,0 +1,202 @@
+---
+title: 
+author: "Rashad Yusifov"
+date: "14/06/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(viridis)
+library(hrbrthemes)
+library(plotly)
+library(ggcorrplot)
+library(gganimate)
+```
+
+## Data Review
+```{r include = FALSE}
+
+data <- read_csv("heart.csv")
+
+data < tibble(data)
+
+```
+
+
+```{r echo =FALSE}
+
+tibble(data)
+
+```
+
+## Figure 1
+
+For my 1st figure, I am going to create a dumbbell chart that plots sex on the x axis and thalachh variable (maximum heart rate achieved) on the y axis.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+### thalach - maximum heart rate achieved
+
+datafiltered1 <- data %>% filter(age >= 40 & age <= 70)
+
+datafiltered2 <- datafiltered1 %>%  mutate(age_range = case_when(age >= 40 & age  <= 50   ~ "40-50",
+                                             age >= 51 & age  <= 60   ~ "51-60",
+                                              age >= 61 & age  <= 70   ~ "61-70",
+                                             ))
+
+
+datafiltered2$sex <- recode(datafiltered2$sex, `0` = "Male", `1` = "Female")
+
+
+datafiltered3 <- select(datafiltered2,"sex","age_range","thalachh")
+
+datafiltered3 <- tibble(datafiltered3)
+
+ggplot(datafiltered3, aes(x=sex, y = thalachh, color =  sex)) + 
+    geom_point() + scale_size(range = c(1.4, 19), name="Population (M)") +
+    scale_color_viridis(discrete=TRUE, guide=FALSE)  +
+     scale_color_manual(values = c("blue","red")) + labs(x="Age Range", y="Maximum achieved heart rate")
+
+
+
+```
+
+## Figure 2
+
+For my 2nd figure, I am going to create a scatterplot for the relationship berween Chest Pain Type and Serum cholestoral.
+
+```{r echo=FALSE}
+
+
+datafiltered4 <- datafiltered2 %>% rename( "chest_pain_type" = cp)
+
+datafiltered4$chest_pain_type <- recode(datafiltered4$chest_pain_type, 
+                                    `0` = "none",`1` = "typical angina", `2` = "atypical angina", `3` = "non-anginal pain", `4` = "asymptomatic")
+
+
+datafiltered5 <- select(datafiltered4,"age_range","chest_pain_type","chol") %>% group_by(age_range,chest_pain_type)
+
+ggplot(datafiltered5, aes(x=chest_pain_type, y = chol, fill = age_range, color =  age_range)) + geom_jitter() + labs(x=" Chest Pain Type", y="Serum cholestoral in mg/dl")
+
+```
+
+
+## Figure 3
+
+For the third figure, I will display a bar plot of The slope of the peak exercise ST segment and Serum cholestoral for age ranges identified.
+
+The slope of the peak exercise ST segment (1 = upsloping; 2 = flat; 3 = downsloping)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+### The slope of the peak exercise ST segment (1 = upsloping; 2 = flat; 3 = downsloping)
+
+datafiltered6 <- select(datafiltered4,"chol","slp","age_range") %>% group_by(age_range,slp) %>% summarise(avg_chol = mean(chol))
+
+
+
+ggplot(datafiltered6, aes(x=slp, y = avg_chol, fill = age_range, color =  age_range)) + geom_bar(stat = "Identity") + facet_wrap(~factor(age_range)) +labs(x=" The slope of the peak exercise ST segment", y="Serum cholestoral in mg/dl")
+```
+
+
+## Figure 4
+
+For the 4th figure, I display a box plot of resting blood pressure for each age range by sex. You can select and deselect the data as per gender by clicking on female and male. The graph is created by plotly.
+
+
+```{r echo=FALSE}
+
+datafiltered4 <- datafiltered4 %>% rename( "Gender" = sex)
+
+ggplotly(ggplot(datafiltered4, aes(x=age_range, y = trtbps, fill = Gender, color =  Gender)) + geom_boxplot()  + labs(x = "Age Range", y = "Resting blood pressure"))
+
+```
+
+
+
+## Figure 5
+
+For the 5th figure, I display an animated relationship between ST depression and serum cholestoral level. The graph is created by gganimate package.
+
+```{r echo=FALSE}
+
+p <- ggplot(datafiltered4, aes(x=oldpeak, y = chol, fill = factor(Gender), color =  factor(Gender))) + geom_point(alpha=0.5) +
+    scale_size(range = c(.1, 24), name="Population (M)")
+
+p + facet_wrap(~Gender) + transition_reveal(oldpeak) + labs(x = "ST depression", y= "Serum cholestoral in mg/dl")
+
+
+
+```
+
+
+
+## Figure 6
+
+For the 6th figure, I display an animated relationship between age and serum cholestoral level. The graph is created by gganimate package.
+
+```{r echo=FALSE}
+
+data_agecol <-  datafiltered4 %>% select(age, chol) %>% group_by(age) %>% summarise(avg_chol = mean(chol))
+
+
+my_anim <- ggplot(data_agecol, aes(x=age, y = avg_chol, fill = factor(age), color =  factor(age))) + geom_bar(stat = "Identity")  +
+  # Here comes the gganimate code
+  transition_states(
+    age) + labs(x = "Age", y= "Serum cholestoral in mg/dl")
+
+
+
+
+anim1 <- my_anim +
+  enter_fade() +
+  exit_fade()
+
+anim1
+
+```
+
+
+## Figure 7
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+## restecg - resting electrocardiographic results (0 = normal; 1 = having ST-T; 2 = hypertrophy)
+
+
+ggplot(datafiltered4, aes(x=oldpeak, y = restecg, fill = Gender, color =  Gender)) + geom_jitter(aes(col=Gender)) + 
+  geom_smooth(aes(col=Gender), method="lm") + facet_wrap(~factor(Gender)) +labs(x=" ST depression induced by exercise relative to rest", y="Resting electrocardiographic results")
+
+```
+
+
+## Figure 8
+
+```{r echo=FALSE}
+
+  
+ggplotly(ggplot(datafiltered4, aes(factor(fbs), chol, color = Gender)) + 
+  geom_jitter() + labs(x ="fasting blood sugar > 120 mg/dl", y="Serum cholestoral in mg/dl"))
+```
+
+
+
+## Figure 9 - Bonus Figure
+
+### Correlogram for data
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+
+corr <- round(cor(data), 1)
+
+ggcorrplot(corr, hc.order = TRUE, 
+           type = "lower", 
+           lab = TRUE, 
+           lab_size = 3, 
+           method="circle", 
+           colors = c("tomato2", "white", "springgreen3"), 
+           title="Correlogram of mtcars", 
+           ggtheme=theme_bw)
+```

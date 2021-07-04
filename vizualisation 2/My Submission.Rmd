@@ -1,0 +1,76 @@
+---
+title: "Week 2 Peer Review"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+######DO NOT MODIFY. This will load required packages and data.
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+cces <- drop_na(read_csv(url("https://www.dropbox.com/s/ahmt12y39unicd2/cces_sample_coursera.csv?raw=1")))
+```
+
+### Rashad Yusifov:
+
+
+
+## Exercise 1
+
+
+
+```{r exercise1, echo=FALSE, warning=FALSE}
+
+cces$ideo5 <- recode(cces$ideo5, "1" = "Very liberal", "2" = "Liberal", "3" = "Moderate","4" = "Conservative","5" = "Very conservative")
+
+
+gplot <- ggplot(cces, aes(x = ideo5, fill = ideo5)) + geom_bar() + labs(x="Ideology",y="Bills Passed") + labs(x = "Ideology" , y = "Count", title = "Respondent Ideology") + guides(fill=FALSE)
+
+gplot
+
+
+```
+
+## Exercise 2
+
+
+```{r exercise2,echo=FALSE}
+cces$pew_religimp <- recode(cces$pew_religimp, "1" = "Very important", "2" = "Somewhat important", "3" = "Not too important","4" = "Not at all important")
+
+
+cces <- rename(cces, Ideology = ideo5)
+
+
+gplot <- ggplot(cces, aes(x = pew_religimp, fill = Ideology)) + geom_bar() + labs(x = "Importance of Religion" , y = "Count", title = "Importance of Religion by Ideology")
+
+gplot
+```
+
+## Exercise 3
+
+
+
+```{r exercise3,echo=FALSE}
+
+semester <- seq(1,6)
+
+Student <- c("Amanda", "Betty","Carol")
+
+
+?expand.grid
+dat <- expand.grid(Semester=semester,Student=Student)
+
+
+dat$Grade <- runif(18, 80, 100)
+
+ggplot(dat, aes(Semester, Grade, color = Student)) + geom_line() + scale_fill_manual(values = c("red", "black", "blue")) + theme(legend.position="none") +
+  facet_wrap(~Student) + labs(title = "Student Grades by Semester")
+  
+
+
+```
